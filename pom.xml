@@ -111,6 +111,11 @@
 			<artifactId>snowframe-util-http</artifactId>
 			<version>${dep.snowframe.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>me.lauriichan.snowframe</groupId>
+			<artifactId>snowframe-util-http-netty</artifactId>
+			<version>${dep.snowframe.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
