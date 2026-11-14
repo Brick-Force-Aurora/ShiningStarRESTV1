@@ -10,16 +10,20 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollIoHandler;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioIoHandler;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.AttributeKey;
 import me.lauriichan.snowframe.ConfigModule;
 import me.lauriichan.snowframe.SnowFrame;
+import me.lauriichan.snowframe.extension.Extension;
 import me.lauriichan.snowframe.util.http.netty.HttpNode;
 import me.lauriichan.snowframe.util.http.netty.server.HttpInit;
 import me.lauriichan.snowframe.util.http.netty.server.IHttpConfig;
 
+@Extension
 public class WebManager extends IntegrationManager {
-    
+
     public static final AttributeKey<Server> API_SERVER = AttributeKey.valueOf("API_SERVER");
 
     private final ServerBootstrap bootstrap = new ServerBootstrap();
@@ -58,7 +62,7 @@ public class WebManager extends IntegrationManager {
     @Override
     protected void onStart(SnowFrame<RestApp> snowFrame) throws Throwable {
         bootstrap.group(group).localAddress(apiConfig.webHost(), apiConfig.webPort()).childOption(ChannelOption.TCP_NODELAY, true)
-            .childHandler(init);
+            .channel(Epoll.isAvailable() ? EpollServerSocketChannel.class : NioServerSocketChannel.class).childHandler(init);
         root.reset();
         WebSignal.Setup setup = new WebSignal.Setup(new ApiKeyAuthenticationProvider(apiConfig));
         snowFrame.app().signalManager().call(setup);

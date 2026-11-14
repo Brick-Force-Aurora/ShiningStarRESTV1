@@ -2,6 +2,8 @@ package de.brickforceaurora.restv1.util.console;
 
 import java.util.Arrays;
 
+import org.jline.reader.UserInterruptException;
+
 import de.brickforceaurora.restv1.Main;
 import de.brickforceaurora.restv1.command.api.ConsoleActor;
 import de.brickforceaurora.restv1.command.message.CommandManagerMessage;
@@ -31,7 +33,12 @@ public final class ConsoleInputHandler {
 
     public void commandLoop() {
         while (!Main.isShutdown()) {
-            String line = console.readLine();
+            String line;
+            try {
+                line = console.readLine();
+            } catch(UserInterruptException uie) {
+                return;
+            }
             if (line.isBlank()) {
                 continue;
             }

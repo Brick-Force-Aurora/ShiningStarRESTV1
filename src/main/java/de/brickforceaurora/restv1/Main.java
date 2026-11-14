@@ -37,8 +37,7 @@ public final class Main {
 
         snowFrame.lifecycle().execute(SnowFrame.LIFECYCLE_CHAIN_STARTUP);
         snowFrame.app().inputHandler().commandLoop();
-        snowFrame.lifecycle().execute(SnowFrame.LIFECYCLE_CHAIN_SHUTDOWN);
-        System.exit(0);
+        shutdown();
     }
 
     public static Version version() {
@@ -53,6 +52,8 @@ public final class Main {
         if (!SHUT_DOWN.compareAndSet(false, true)) {
             return;
         }
+        snowFrame.lifecycle().execute(SnowFrame.LIFECYCLE_CHAIN_SHUTDOWN);
+        System.exit(0);
     }
 
 }

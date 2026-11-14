@@ -65,7 +65,7 @@ public class UpdaterIntegration_ implements ISignalHandler {
         updateJson.route("bundle", this::bundleUpdate, WebMethod.get(false));
 
         IWebContext<MultiFormData> updateForm = context.signal().provider().createContext("updater/v1/update",
-            HttpContentType.multiFormData(NettyContentType.JSON, InstructionsContentType.UPDATE_INSTRUCTIONS, ZIP_TYPE));
+            NettyContentType.multiFormDataNetty(NettyContentType.JSON, InstructionsContentType.UPDATE_INSTRUCTIONS, ZIP_TYPE));
         updateForm.route("publish", this::publishUpdate, WebMethod.post(true));
     }
 
@@ -186,7 +186,7 @@ public class UpdaterIntegration_ implements ISignalHandler {
             logger.error("Failed to bundle update", e);
             return HttpError.serverError(HttpError.IO_ERROR, HttpError.IO_ERROR_NAME, "Failed to retrieve update; " + e.getMessage());
         }
-        return Response.of(HttpCode.OK).content(HttpContentType.DEFAULT_MULTIFORM_DATA, updateData);
+        return Response.of(HttpCode.OK).content(NettyContentType.DEFAULT_MULTIFORM_DATA, updateData);
     }
 
     public Response publishUpdate(Channel channel, HttpHeaders headers, HttpEncoded query, HttpPath path,

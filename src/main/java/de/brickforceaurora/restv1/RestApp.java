@@ -100,6 +100,7 @@ public class RestApp implements ISnowFrameApp<RestApp> {
             integrations.extensions().forEach(manager -> manager.stop());
         }).register("shutdown", Stage.POST, _ -> {
             Console.INSTANCE.close();
+            ((FileLogger) LOGGER).close();
         });
     }
 
