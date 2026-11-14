@@ -39,7 +39,7 @@ import me.lauriichan.snowframe.util.instance.Shared;
 @Extension
 public class UpdaterIntegration_ implements ISignalHandler {
 
-    private static final HttpContentType<byte[]> ZIP_TYPE = HttpContentType.BINARY.restrict("application/zip");
+    private static final HttpContentType<byte[]> ZIP_TYPE = NettyContentType.BINARY.restrict("application/zip");
 
     private final UpdateStorage storage;
     private final ISimpleLogger logger;

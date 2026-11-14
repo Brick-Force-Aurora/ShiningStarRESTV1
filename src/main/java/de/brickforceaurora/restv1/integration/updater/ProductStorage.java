@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -19,8 +18,10 @@ import java.util.zip.ZipOutputStream;
 import de.brickforceaurora.restv1.RestApp;
 import de.brickforceaurora.restv1.config.common.ProductInfo;
 import de.brickforceaurora.restv1.integration.updater.command.api.UpdateActor;
+import de.brickforceaurora.restv1.integration.updater.http.FileContentType;
 import de.brickforceaurora.restv1.integration.updater.http.InstructionsContentType;
 import de.brickforceaurora.restv1.util.CLIUtil;
+import de.brickforceaurora.restv1.util.IOUtil;
 import de.brickforceaurora.restv1.util.StringReader;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -37,7 +38,6 @@ import me.lauriichan.laylib.command.util.Triple;
 import me.lauriichan.snowframe.resource.source.IDataSource;
 import me.lauriichan.snowframe.util.Version;
 import me.lauriichan.snowframe.util.http.data.MultiFormData;
-import me.lauriichan.snowframe.util.http.type.HttpContentType;
 
 public final class ProductStorage {
 
@@ -226,9 +226,7 @@ public final class ProductStorage {
             }
         }
         MultiFormData data = new MultiFormData();
-        try (InputStream stream = updateSrc.openReadableStream()) {
-            data.put("zip", HttpContentType.BINARY.disguise("application/zip"), stream.readAllBytes());
-        }
+        data.put("zip", FileContentType.FILE_TYPE.disguise("application/zip"), IOUtil.asFile(updateSrc));
         try (BufferedReader reader = instrSrc.openReader()) {
             data.put("instructions", InstructionsContentType.UPDATE_INSTRUCTIONS,
                 new UpdateInstructions(reader.lines().filter(UpdateStorage.NOT_EMPTY_LINES).toArray(String[]::new)));
