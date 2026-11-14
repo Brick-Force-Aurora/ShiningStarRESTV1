@@ -147,43 +147,8 @@ public final class ProductStorage {
         }
         instructionMap.put(version, instructions);
         if (!overwritten) {
-            if (versions.size() < 12) {
-                versions.add(version);
-                Collections.sort(versions);
-            } else {
-                Version target = null;
-                int middle;
-                int offset = 0;
-                boolean higher = false;
-                for (middle = (versions.size() - 1) / 2; middle > 10; middle /= 2) {
-                    target = versions.get(offset + middle);
-                    if (higher = version.isHigher(target)) {
-                        offset += middle;
-                    }
-                }
-                if (target == null) {
-                    for (int i = 0; i < versions.size(); i++) {
-                        if (version.isLower(versions.get(i))) {
-                            versions.add(i, version);
-                            break;
-                        }
-                    }
-                } else if (higher) {
-                    for (int i = offset + middle - 1; i >= offset; i--) {
-                        if (version.isLower(versions.get(i))) {
-                            versions.add(i, version);
-                            break;
-                        }
-                    }
-                } else {
-                    for (int i = offset; i < middle; i++) {
-                        if (version.isHigher(versions.get(i))) {
-                            versions.add(i - 1, version);
-                            break;
-                        }
-                    }
-                }
-            }
+            versions.add(version);
+            Collections.sort(versions);
         }
         storage.logger().info("Product '{0}' received the update {1} with {2} instructions. (Overwritten: {3})", info.name(),
             version.toString(), instructions.instructions().length, overwritten ? "yes" : "no");
