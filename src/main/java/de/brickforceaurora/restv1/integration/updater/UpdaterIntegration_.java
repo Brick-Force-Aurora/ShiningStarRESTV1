@@ -1,20 +1,18 @@
 package de.brickforceaurora.restv1.integration.updater;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.UUID;
-
-import com.sun.net.httpserver.HttpExchange;
 
 import de.brickforceaurora.restv1.RestApp;
 import de.brickforceaurora.restv1.config.common.ProductInfo;
-import de.brickforceaurora.restv1.integration.api.web.IWebContext;
-import de.brickforceaurora.restv1.integration.api.web.WebMethod;
-import de.brickforceaurora.restv1.integration.api.web.WebSignal;
+import de.brickforceaurora.restv1.integration.api.webv2.IWebContext;
+import de.brickforceaurora.restv1.integration.api.webv2.WebMethod;
+import de.brickforceaurora.restv1.integration.api.webv2.WebSignal;
 import de.brickforceaurora.restv1.integration.updater.http.InstructionsContentType;
 import de.brickforceaurora.restv1.integration.util.web.HttpError;
 import de.brickforceaurora.restv1.integration.util.web.HttpResp;
 import de.brickforceaurora.restv1.util.ParseUtil;
+import io.netty.channel.Channel;
 import me.lauriichan.laylib.json.IJson;
 import me.lauriichan.laylib.json.JsonArray;
 import me.lauriichan.laylib.json.JsonObject;
@@ -29,8 +27,9 @@ import me.lauriichan.snowframe.util.Version;
 import me.lauriichan.snowframe.util.http.HttpCode;
 import me.lauriichan.snowframe.util.http.HttpData;
 import me.lauriichan.snowframe.util.http.HttpHeaders;
+import me.lauriichan.snowframe.util.http.data.HttpEncoded;
 import me.lauriichan.snowframe.util.http.data.MultiFormData;
-import me.lauriichan.snowframe.util.http.server.HttpQuery;
+import me.lauriichan.snowframe.util.http.netty.HttpPath;
 import me.lauriichan.snowframe.util.http.server.Response;
 import me.lauriichan.snowframe.util.http.type.HttpContentType;
 import me.lauriichan.snowframe.util.instance.Shared;
@@ -69,8 +68,8 @@ public class UpdaterIntegration_ implements ISignalHandler {
         updateForm.route("publish", this::publishUpdate, WebMethod.post(true));
     }
 
-    public Response listProduct(InetAddress address, HttpHeaders headers, HttpQuery parameters) {
-        int page = Math.max(parameters.asInt("page", 0), 0);
+    public Response listProduct(Channel channel, HttpHeaders headers, HttpEncoded query, HttpPath path) {
+        int page = Math.max(query.getInt("page", 0), 0);
         JsonObject object = new JsonObject();
         object.put("page", page);
         object.put("max_page", Math.max(Math.ceilDiv(storage.productCount(), 20) - 1, 0));
@@ -85,8 +84,8 @@ public class UpdaterIntegration_ implements ISignalHandler {
         return HttpResp.ok("data", object);
     }
 
-    public Response idProduct(InetAddress address, HttpHeaders headers, HttpQuery parameters) {
-        String productName = parameters.asString("product_name");
+    public Response idProduct(Channel channel, HttpHeaders headers, HttpEncoded query, HttpPath path) {
+        String productName = query.getString("product_name");
         if (productName == null || productName.isBlank()) {
             return HttpError.badRequest(HttpError.MISSING_DATA, HttpError.MISSING_DATA_NAME, "Query parameter 'product_name' is missing");
         }
@@ -100,10 +99,10 @@ public class UpdaterIntegration_ implements ISignalHandler {
         return HttpResp.ok("info", object);
     }
 
-    public Response latestUpdate(InetAddress address, HttpHeaders headers, HttpQuery parameters) {
+    public Response latestUpdate(Channel channel, HttpHeaders headers, HttpEncoded query, HttpPath path) {
         ProductStorage storage;
         try {
-            UUID productId = ParseUtil.uuidFromString(parameters.asString("product_id"));
+            UUID productId = ParseUtil.uuidFromString(query.getString("product_id"));
             storage = this.storage.ofProduct(productId);
             if (storage == null) {
                 return HttpError.notFound("Unknown product id '%s'".formatted(productId.toString()));
@@ -122,10 +121,10 @@ public class UpdaterIntegration_ implements ISignalHandler {
         return HttpResp.ok("latest_version", IJson.of(version.toString()));
     }
 
-    public Response listUpdate(InetAddress address, HttpHeaders headers, HttpQuery parameters) {
+    public Response listUpdate(Channel channel, HttpHeaders headers, HttpEncoded query, HttpPath path) {
         ProductStorage storage;
         try {
-            UUID productId = ParseUtil.uuidFromString(parameters.asString("product_id"));
+            UUID productId = ParseUtil.uuidFromString(query.getString("product_id"));
             storage = this.storage.ofProduct(productId);
             if (storage == null) {
                 return HttpError.notFound("Unknown product id '%s'".formatted(productId.toString()));
@@ -137,7 +136,7 @@ public class UpdaterIntegration_ implements ISignalHandler {
                 "Couldn't parse 'product_id' version query parameter; " + iae.getMessage());
         }
 
-        int page = Math.max(parameters.asInt("page", 0), 0);
+        int page = Math.max(query.getInt("page", 0), 0);
         JsonObject object = new JsonObject();
         object.put("page", page);
         object.put("max_page", Math.max(Math.ceilDiv(storage.versionCount(), 20) - 1, 0));
@@ -147,10 +146,10 @@ public class UpdaterIntegration_ implements ISignalHandler {
         return HttpResp.ok("data", object);
     }
 
-    public Response bundleUpdate(InetAddress address, HttpHeaders headers, HttpQuery parameters) {
+    public Response bundleUpdate(Channel channel, HttpHeaders headers, HttpEncoded query, HttpPath path) {
         ProductStorage storage;
         try {
-            UUID productId = ParseUtil.uuidFromString(parameters.asString("product_id"));
+            UUID productId = ParseUtil.uuidFromString(query.getString("product_id"));
             storage = this.storage.ofProduct(productId);
             if (storage == null) {
                 return HttpError.notFound("Unknown product id '%s'".formatted(productId.toString()));
@@ -164,13 +163,13 @@ public class UpdaterIntegration_ implements ISignalHandler {
 
         Version current, target;
         try {
-            current = Version.parse(parameters.asString("current"));
+            current = Version.parse(query.getString("current"));
         } catch (RuntimeException iae) {
             return HttpError.badRequest(HttpError.IO_ERROR, HttpError.IO_ERROR_NAME,
                 "Couldn't parse 'current' version query parameter; " + iae.getMessage());
         }
         try {
-            target = Version.parse(parameters.asString("target"));
+            target = Version.parse(query.getString("target"));
         } catch (RuntimeException iae) {
             return HttpError.badRequest(HttpError.IO_ERROR, HttpError.IO_ERROR_NAME,
                 "Couldn't parse 'target' version query parameter; " + iae.getMessage());
@@ -189,11 +188,11 @@ public class UpdaterIntegration_ implements ISignalHandler {
         return Response.of(HttpCode.OK).content(HttpContentType.DEFAULT_MULTIFORM_DATA, updateData);
     }
 
-    public Response publishUpdate(HttpExchange exchange, InetAddress address, HttpHeaders headers, HttpQuery parameters,
+    public Response publishUpdate(Channel channel, HttpHeaders headers, HttpEncoded query, HttpPath path,
         HttpData<MultiFormData> body) {
         ProductStorage storage;
         try {
-            UUID productId = ParseUtil.uuidFromString(parameters.asString("product_id"));
+            UUID productId = ParseUtil.uuidFromString(query.getString("product_id"));
             storage = this.storage.ofProduct(productId);
             if (storage == null) {
                 return HttpError.notFound("Unknown product id '%s'".formatted(productId.toString()));

@@ -4,7 +4,7 @@ import java.security.SecureRandom;
 import java.util.UUID;
 
 import de.brickforceaurora.restv1.config.common.Server;
-import de.brickforceaurora.restv1.integration.api.web.ApiKeyAuthenticationProvider.IApiKeyStorage;
+import de.brickforceaurora.restv1.integration.api.webv2.IApiKeyStorage;
 import de.brickforceaurora.restv1.util.RandomUtil;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import me.lauriichan.laylib.logger.ISimpleLogger;

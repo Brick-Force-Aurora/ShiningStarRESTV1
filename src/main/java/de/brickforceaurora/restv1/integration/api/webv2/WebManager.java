@@ -60,13 +60,17 @@ public class WebManager extends IntegrationManager {
         bootstrap.group(group).localAddress(apiConfig.webHost(), apiConfig.webPort()).childOption(ChannelOption.TCP_NODELAY, true)
             .childHandler(init);
         root.reset();
-        
+        WebSignal.Setup setup = new WebSignal.Setup(new ApiKeyAuthenticationProvider(apiConfig));
+        snowFrame.app().signalManager().call(setup);
+        snowFrame.app().signalManager().call(new WebSignal.Start(new WebProviderImpl(root, setup.authenticationProvider())));
         this.serverChannel = bootstrap.bind().sync().channel();
     }
 
     @Override
     protected void onStop(SnowFrame<RestApp> snowFrame) throws Throwable {
-        serverChannel.close().sync();
+        this.serverChannel.close().sync();
+        this.serverChannel = null;
+        snowFrame.app().signalManager().call(new WebSignal.Stop());
     }
 
 }
