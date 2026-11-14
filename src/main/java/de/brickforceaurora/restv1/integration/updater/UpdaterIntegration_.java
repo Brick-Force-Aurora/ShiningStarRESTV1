@@ -30,6 +30,7 @@ import me.lauriichan.snowframe.util.http.HttpHeaders;
 import me.lauriichan.snowframe.util.http.data.HttpEncoded;
 import me.lauriichan.snowframe.util.http.data.MultiFormData;
 import me.lauriichan.snowframe.util.http.netty.HttpPath;
+import me.lauriichan.snowframe.util.http.netty.type.NettyContentType;
 import me.lauriichan.snowframe.util.http.server.Response;
 import me.lauriichan.snowframe.util.http.type.HttpContentType;
 import me.lauriichan.snowframe.util.instance.Shared;
@@ -54,17 +55,17 @@ public class UpdaterIntegration_ implements ISignalHandler {
 
     @SignalHandler
     public void onStart(SignalContext<WebSignal.Start> context) {
-        IWebContext<IJson<?>> productJson = context.signal().provider().createContext("updater/v1/product", HttpContentType.JSON);
+        IWebContext<IJson<?>> productJson = context.signal().provider().createContext("updater/v1/product", NettyContentType.JSON);
         productJson.route("list", this::listProduct, WebMethod.get(false));
         productJson.route("id", this::idProduct, WebMethod.get(false));
 
-        IWebContext<IJson<?>> updateJson = context.signal().provider().createContext("updater/v1/update", HttpContentType.JSON);
+        IWebContext<IJson<?>> updateJson = context.signal().provider().createContext("updater/v1/update", NettyContentType.JSON);
         updateJson.route("latest", this::latestUpdate, WebMethod.get(false));
         updateJson.route("list", this::listUpdate, WebMethod.get(false));
         updateJson.route("bundle", this::bundleUpdate, WebMethod.get(false));
 
         IWebContext<MultiFormData> updateForm = context.signal().provider().createContext("updater/v1/update",
-            HttpContentType.multiFormData(HttpContentType.JSON, InstructionsContentType.UPDATE_INSTRUCTIONS, ZIP_TYPE));
+            HttpContentType.multiFormData(NettyContentType.JSON, InstructionsContentType.UPDATE_INSTRUCTIONS, ZIP_TYPE));
         updateForm.route("publish", this::publishUpdate, WebMethod.post(true));
     }
 
